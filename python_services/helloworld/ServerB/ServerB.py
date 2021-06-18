@@ -26,7 +26,13 @@ class Greeter(helloworld_pb2_grpc.GreeterServicer):
     async def SayHello(
             self, request: helloworld_pb2.HelloRequest,
             context: grpc.aio.ServicerContext) -> helloworld_pb2.HelloReply:
-        return helloworld_pb2.HelloReply(message='Hello from ServerB, %s!' % request.name)
+        messageFromServerA = 'Hello from ServerA, %s!' % request.name
+        respFromServerB = ""
+        with grpc.insecure_channel('localhost:50053') as channel:
+            stub = helloworld_pb2_grpc.GreeterStub(channel)
+            response = stub.SayHello(helloworld_pb2.HelloRequest(name="\n我是从ServerB发送出来的name字段"))
+            respFromServerB = response.message + messageFromServerA
+        return helloworld_pb2.HelloReply(message=respFromServerB)
 
 
 async def serve() -> None:
